@@ -1,0 +1,325 @@
+-- EDAR UI | Roblox Studio
+-- Colocar en StarterPlayer > StarterPlayerScripts
+-- LocalScript
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "EdarUI"
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local color = Color3.fromRGB(0,255,50)
+local enabledSpeed = false
+local infiniteJump = false
+local speedValue = 45
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0,400,0,400)
+frame.Position = UDim2.new(0.5,-200,0.5,-200)
+frame.BackgroundColor3 = Color3.fromRGB(12,12,12)
+frame.BorderSizePixel = 0
+frame.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0,12)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = color
+stroke.Thickness = 2
+stroke.Parent = frame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1,-50,0,40)
+title.BackgroundTransparency = 1
+title.Text = "EDAR"
+title.TextColor3 = color
+title.TextSize = 24
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.new(0,40,0,35)
+minimize.Position = UDim2.new(1,-45,0,3)
+minimize.Text = "-"
+minimize.TextColor3 = color
+minimize.BackgroundColor3 = Color3.fromRGB(20,20,20)
+minimize.Parent = frame
+
+local content = Instance.new("Frame")
+content.Size = UDim2.new(1,-10,1,-50)
+content.Position = UDim2.new(0,5,0,45)
+content.BackgroundTransparency = 1
+content.Parent = frame
+
+local tabs = Instance.new("Frame")
+tabs.Size = UDim2.new(0,110,1,0)
+tabs.BackgroundColor3 = Color3.fromRGB(18,18,18)
+tabs.Parent = content
+
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.Padding = UDim.new(0,4)
+tabLayout.Parent = tabs
+
+local page = Instance.new("Frame")
+page.Size = UDim2.new(1,-115,1,0)
+page.Position = UDim2.new(0,115,0,0)
+page.BackgroundColor3 = Color3.fromRGB(18,18,18)
+page.Parent = content
+
+local pageLayout = Instance.new("UIListLayout")
+pageLayout.Padding = UDim.new(0,6)
+pageLayout.Parent = page
+
+local pages = {}
+
+local function createPage(name)
+    local p = Instance.new("ScrollingFrame")
+    p.Size = UDim2.new(1,0,1,0)
+    p.BackgroundTransparency = 1
+    p.ScrollBarThickness = 3
+    p.Visible = false
+    p.CanvasSize = UDim2.new(0,0,0,0)
+    p.Parent = page
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0,6)
+    layout.Parent = p
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        p.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y+10)
+    end)
+
+    pages[name] = p
+    return p
+end
+
+local function button(parent,text,callback)
+    local b = Instance.new("TextButton")
+    b.Size = UDim2.new(1,-10,0,38)
+    b.BackgroundColor3 = Color3.fromRGB(25,25,25)
+    b.TextColor3 = color
+    b.TextSize = 14
+    b.Font = Enum.Font.GothamBold
+    b.Text = text
+    b.Parent = parent
+
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0,6)
+    c.Parent = b
+
+    b.MouseButton1Click:Connect(callback)
+    return b
+end
+
+local function label(parent,text)
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(1,-10,0,30)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = color
+    l.Font = Enum.Font.Gotham
+    l.TextSize = 14
+    l.Parent = parent
+    return l
+end
+
+-- Pestañas
+local names = {
+    "Aimbot",
+    "Movimiento",
+    "Teletransporte",
+    "ESP",
+    "Jugadores",
+    "Misc",
+    "Info"
+}
+
+for _,name in ipairs(names) do
+    button(tabs,name,function()
+        for _,p in pairs(pages) do
+            p.Visible = false
+        end
+        pages[name].Visible = true
+    end)
+    createPage(name)
+end
+
+pages["Aimbot"].Visible = true
+
+-- MOVIMIENTO
+label(pages["Movimiento"],"Velocidad")
+
+button(pages["Movimiento"],"Velocidad: ON / OFF",function()
+    enabledSpeed = not enabledSpeed
+
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    if hum then
+        hum.WalkSpeed = enabledSpeed and speedValue or 16
+    end
+end)
+
+button(pages["Movimiento"],"Velocidad +",function()
+    speedValue = speedValue + 5
+    if enabledSpeed and player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = speedValue end
+    end
+end)
+
+button(pages["Movimiento"],"Velocidad -",function()
+    speedValue = math.max(16,speedValue-5)
+    if enabledSpeed and player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = speedValue end
+    end
+end)
+
+label(pages["Movimiento"],"Salto")
+
+button(pages["Movimiento"],"Infinity Jump: ON / OFF",function()
+    infiniteJump = not infiniteJump
+end)
+
+UIS.JumpRequest:Connect(function()
+    if infiniteJump then
+        local char = player.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- TELETRANSPORTE
+label(pages["Teletransporte"],"Teletransporte de prueba")
+
+button(pages["Teletransporte"],"Volver a Spawn",function()
+    local char = player.Character
+    if char then
+        char:MoveTo(Vector3.new(0,5,0))
+    end
+end)
+
+-- JUGADORES
+local playerList = label(pages["Jugadores"],"Jugadores conectados:")
+playerList.Size = UDim2.new(1,-10,0,40)
+
+local function refreshPlayers()
+    for _,obj in ipairs(pages["Jugadores"]:GetChildren()) do
+        if obj:IsA("TextButton") and obj.Name == "PlayerEntry" then
+            obj:Destroy()
+        end
+    end
+
+    for _,p in ipairs(Players:GetPlayers()) do
+        local b = button(pages["Jugadores"],p.Name,function()
+            -- Solo muestra la selección.
+            -- No teletransporta ni ataca a otros jugadores.
+            playerList.Text = "Seleccionado: "..p.Name
+        end)
+        b.Name = "PlayerEntry"
+    end
+end
+
+Players.PlayerAdded:Connect(refreshPlayers)
+Players.PlayerRemoving:Connect(refreshPlayers)
+refreshPlayers()
+
+-- ESP DE DEPURACIÓN
+label(pages["ESP"],"Opciones visuales de depuración")
+
+button(pages["ESP"],"Información",function()
+    playerList.Text = "ESP de depuración"
+end)
+
+-- COLOR
+local colors = {
+    Color3.fromRGB(0,255,50),
+    Color3.fromRGB(0,170,255),
+    Color3.fromRGB(255,0,170),
+    Color3.fromRGB(255,255,0),
+    Color3.fromRGB(255,255,255)
+}
+local colorIndex = 1
+
+button(pages["Misc"],"Cambiar color",function()
+    colorIndex = colorIndex % #colors + 1
+    color = colors[colorIndex]
+
+    stroke.Color = color
+    title.TextColor3 = color
+
+    for _,obj in ipairs(gui:GetDescendants()) do
+        if obj:IsA("TextButton") then
+            obj.TextColor3 = color
+        end
+    end
+end)
+
+button(pages["Misc"],"Restaurar velocidad",function()
+    speedValue = 45
+    enabledSpeed = false
+    if player.Character then
+        local hum = player.Character:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = 16 end
+    end
+end)
+
+label(pages["Info"],"Edar UI")
+label(pages["Info"],"Version 1.0")
+label(pages["Info"],"Interfaz de prueba para Roblox Studio")
+
+-- MINIMIZAR
+local minimized = false
+
+minimize.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    content.Visible = not minimized
+    frame.Size = minimized and UDim2.new(0,150,0,40)
+        or UDim2.new(0,400,0,400)
+    title.Text = minimized and "EDAR +" or "EDAR"
+end)
+
+-- MOVIBLE
+local dragging = false
+local dragStart
+local startPos
+
+title.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
